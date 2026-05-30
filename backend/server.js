@@ -17,7 +17,18 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    // 1. Get the URL from env, remove any trailing slash
+    const allowedOrigin = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, "");
+    
+    // 2. Allow requests with no origin (like mobile apps or curl) 
+    //    OR check if the origin starts with our allowed base
+    if (!origin || origin.startsWith(allowedOrigin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true,
 };
