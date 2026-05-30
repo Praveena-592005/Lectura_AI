@@ -32,14 +32,6 @@ app.use('/api/auth', auth);
 app.use('/api/summary', summary);
 app.use('/api/folderRoutes', folderRoutes);
 
-// Production Static File Serving
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'frontend/dist')));
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'frontend', 'dist', 'index.html'));
-  });
-}
-
 // Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error('Operational error caught in pipeline:', err.message);
