@@ -1,9 +1,8 @@
-// server.js
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import path from 'path';
 import { fileURLToPath } from 'url';
+import path from 'path';
 import connectDB from './config/db.js';
 import auth from './routes/auth.js';
 import summary from './routes/summary.js';
@@ -17,7 +16,6 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Configure CORS for Production
 const corsOptions = {
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
@@ -27,12 +25,10 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// API Routes
 app.use('/api/auth', auth);
 app.use('/api/summary', summary);
 app.use('/api/folderRoutes', folderRoutes);
 
-// Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error('Operational error caught in pipeline:', err.message);
   res.status(err.status || 500).json({
