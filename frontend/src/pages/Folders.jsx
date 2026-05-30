@@ -13,7 +13,7 @@ export default function Folders() {
   const fetchFolders = async () => {
     try {
       const token = localStorage.getItem('token');
-      const { data } = await axios.get('http://localhost:5000/api/folderRoutes', {
+      const { data } = await axios.get('https://lectura-ai-fmjl.onrender.com/api/folderRoutes', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setFolders(data);
@@ -31,7 +31,7 @@ export default function Folders() {
     if (!newFolderName.trim()) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/folderRoutes', 
+      await axios.post('https://lectura-ai-fmjl.onrender.com/api/folderRoutes', 
         { name: newFolderName },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -49,7 +49,7 @@ export default function Folders() {
     }
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/folderRoutes/${id}`, {
+      await axios.delete(`https://lectura-ai-fmjl.onrender.com/api/folderRoutes/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setFolders(folders.filter(f => f._id !== id));
