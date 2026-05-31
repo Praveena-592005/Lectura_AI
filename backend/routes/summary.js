@@ -1,3 +1,6 @@
+import { exec } from 'child_process';
+import util from 'util';
+
 import express from 'express';
 import mammoth from 'mammoth';
 import fs from 'fs';
@@ -11,6 +14,8 @@ import Folder from '../models/Folder.js';
 const require = createRequire(import.meta.url);
 const pdfParse = require('pdf-parse');
 const router = express.Router();
+
+const execPromise = util.promisify(exec);
 
 // --- Helper Functions ---
 function extractVideoId(url) {
@@ -143,29 +148,42 @@ router.post('/summarize-youtube', protect, async (req, res) => {
   const { title, videoUrl, depth, folderId } = req.body;
   const videoId = extractVideoId(videoUrl);
   if (!videoId) return res.status(400).json({ message: 'Invalid URL' });
-  
+
+  const outputAudio = `./temp_${Date.now()}.mp3`;
+
   try {
-    const transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
-    const transcript = transcriptData.map(i => i.text).join(' ');
+    // 1. Download and convert to MP3 using yt-dlp
+    // This command downloads only the audio and converts it to MP3
+    await execPromise(`yt-dlp -x --audio-format mp3 -o "${outputAudio}" "${videoUrl}"`);
     
+    // 2. Transcribe the file using your existing Groq function
+    const transcript = await transcribeWithGroq(outputAudio);
+    
+    // 3. Generate summary
     const summaryText = await generateSummaryWithGroq(transcript, depth);
     
-    // Include the save logic here
+    // 4. Save to DB
     const summaryData = { user: req.user._id, title: title || 'YouTube', originalText: transcript, summaryText };
     if (folderId && folderId !== 'null' && folderId !== '') {
       summaryData.folder = folderId;
     }
 
     const newSummary = await Summary.create(summaryData);
+    
+    // 5. Cleanup temp file
+    if (fs.existsSync(outputAudio)) fs.unlinkSync(outputAudio);
+    
     res.status(201).json(newSummary);
     
   } catch (err) { 
-    console.error("Scraper failed:", err);
-    res.status(503).json({ 
-      message: 'YouTube is currently restricting automated access. Please try uploading the video file directly, or try again later.' 
+    if (fs.existsSync(outputAudio)) fs.unlinkSync(outputAudio);
+    console.error("Pipeline failed:", err);
+    res.status(500).json({ 
+      message: 'Processing failed. The video might be private, too long, or unsupported.' 
     }); 
   }
 });
+
 // Add this to routes/summary.js if it doesn't exist
 router.get('/', protect, async (req, res) => {
   const { folderId } = req.query;
