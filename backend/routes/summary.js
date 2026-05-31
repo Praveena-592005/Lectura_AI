@@ -143,20 +143,29 @@ router.post('/summarize-youtube', protect, async (req, res) => {
   const { title, videoUrl, depth, folderId } = req.body;
   const videoId = extractVideoId(videoUrl);
   if (!videoId) return res.status(400).json({ message: 'Invalid URL' });
+  
   try {
-    const transcript = (await YoutubeTranscript.fetchTranscript(videoId)).map(i => i.text).join(' ');
-    const summaryText = await generateSummaryWithGroq(transcript, depth);
-    const summaryData = { user: req.user._id, title: title || 'YouTube', originalText: transcript, summaryText };
+    const transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
+    const transcript = transcriptData.map(i => i.text).join(' ');
     
+    const summaryText = await generateSummaryWithGroq(transcript, depth);
+    
+    // Include the save logic here
+    const summaryData = { user: req.user._id, title: title || 'YouTube', originalText: transcript, summaryText };
     if (folderId && folderId !== 'null' && folderId !== '') {
       summaryData.folder = folderId;
     }
 
     const newSummary = await Summary.create(summaryData);
     res.status(201).json(newSummary);
-  } catch (err) { res.status(500).json({ message: err.message }); }
+    
+  } catch (err) { 
+    console.error("Scraper failed:", err);
+    res.status(503).json({ 
+      message: 'YouTube is currently restricting automated access. Please try uploading the video file directly, or try again later.' 
+    }); 
+  }
 });
-
 // Add this to routes/summary.js if it doesn't exist
 router.get('/', protect, async (req, res) => {
   const { folderId } = req.query;
