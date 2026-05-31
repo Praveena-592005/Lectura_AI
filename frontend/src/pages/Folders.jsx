@@ -4,6 +4,8 @@ import { Folder, Plus, Trash2 } from 'lucide-react';
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
 
+import { API_BASE_URL } from '../config';
+
 export default function Folders() {
   const [folders, setFolders] = useState([]);
   const [newFolderName, setNewFolderName] = useState('');
@@ -13,7 +15,7 @@ export default function Folders() {
   const fetchFolders = async () => {
     try {
       const token = localStorage.getItem('token');
-      const { data } = await axios.get('https://lectura-ai-fmjl.onrender.com/api/folderRoutes', {
+      const { data } = await axios.get('${API_BASE_URL}/api/folderRoutes', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setFolders(data);
@@ -31,7 +33,7 @@ export default function Folders() {
     if (!newFolderName.trim()) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.post('https://lectura-ai-fmjl.onrender.com/api/folderRoutes', 
+      await axios.post('${API_BASE_URL}/api/folderRoutes', 
         { name: newFolderName },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -49,7 +51,7 @@ export default function Folders() {
     }
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`https://lectura-ai-fmjl.onrender.com/api/folderRoutes/${id}`, {
+      await axios.delete(`${API_BASE_URL}/api/folderRoutes/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setFolders(folders.filter(f => f._id !== id));

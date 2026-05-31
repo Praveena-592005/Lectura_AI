@@ -5,6 +5,8 @@ import { useFormContext } from '../context/FormContext';
 import { Copy, Download, MessageSquare, FolderPlus, Sparkles } from 'lucide-react';
 import AddToFolderModal from '../components/AddToFolderModal';
 
+import { API_BASE_URL } from '../config';
+
 const Dashboard = () => {
   const {
     title, setTitle,
@@ -32,7 +34,7 @@ useEffect(() => {
     const fetchFolders = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('https://lectura-ai-fmjl.onrender.com/api/folderRoutes', {
+        const res = await fetch('${API_BASE_URL}/api/folderRoutes', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -60,7 +62,7 @@ useEffect(() => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('https://lectura-ai-fmjl.onrender.com/api/summary/summarize', {
+      const response = await fetch('${API_BASE_URL}/api/summary/summarize', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -99,7 +101,7 @@ const handleFileSubmit = async (e) => {
   try {
     const token = localStorage.getItem('token');
     // FIXED: Changed '/api/summary/summarize-file' to 'http://localhost:5000/api/summaries/summarize-file'
-    const response = await fetch('https://lectura-ai-fmjl.onrender.com/api/summary/summarize-file', {
+    const response = await fetch('${API_BASE_URL}/api/summary/summarize-file', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -135,7 +137,7 @@ const handleFileSubmit = async (e) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('https://lectura-ai-fmjl.onrender.com/api/summary/summarize-youtube', {
+      const response = await fetch('${API_BASE_URL}/api/summary/summarize-youtube', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -162,7 +164,7 @@ const handleFileSubmit = async (e) => {
     setChatHistory(newHistory);
     setChatInput('');
     try {
-      const response = await fetch('https://lectura-ai-fmjl.onrender.com/api/summary/ask-chat', {
+      const response = await fetch('${API_BASE_URL}/api/summary/ask-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ query: chatInput, summaryContext: result })
