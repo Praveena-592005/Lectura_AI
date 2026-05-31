@@ -5,8 +5,6 @@ import axios from 'axios';
 import { ArrowLeft, BookOpen, X, Trash2, FolderOpen } from 'lucide-react';
 import MarkdownRenderer from '../components/MarkdownRenderer';
 
-import { API_BASE_URL } from '../config';
-
 export default function FolderDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -21,10 +19,10 @@ export default function FolderDetail() {
       const token = localStorage.getItem('token');
       // Fetch both folder info and summaries
       const [folderRes, sumRes] = await Promise.all([
-        axios.get(`${API_BASE_URL}/api/folderRoutes/${id}`, {
+        axios.get(`https://lectura-ai-ungu.onrender.com/api/folderRoutes/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        axios.get(`${API_BASE_URL}/api/summary?folderId=${id}`, {
+        axios.get(`https://lectura-ai-ungu.onrender.com/api/summary?folderId=${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
@@ -47,7 +45,7 @@ export default function FolderDetail() {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.patch(`${API_BASE_URL}/api/summary/${noteId}`, 
+      await axios.patch(`https://lectura-ai-ungu.onrender.com/api/summary/${noteId}`, 
         { folderId: null }, 
         { headers: { Authorization: `Bearer ${token}` } }
       );

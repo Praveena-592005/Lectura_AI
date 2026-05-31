@@ -5,8 +5,6 @@ import { downloadAsTXT, downloadAsDOCX, downloadAsPDF } from '../utils/downloadU
 import MarkdownRenderer from '../components/MarkdownRenderer';
 import AddToFolderModal from '../components/AddToFolderModal';
 
-import { API_BASE_URL } from '../config';
-
 export default function History() {
   const [history, setHistory] = useState([]);
   const [folders, setFolders] = useState([]);
@@ -20,8 +18,8 @@ export default function History() {
     try {
       const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
       const [histRes, foldRes] = await Promise.all([
-        fetch('${API_BASE_URL}/api/summary/history', { headers }),
-        fetch('${API_BASE_URL}/api/folderRoutes', { headers })
+        fetch('https://lectura-ai-ungu.onrender.com/api/summary/history', { headers }),
+        fetch('https://lectura-ai-ungu.onrender.com/api/folderRoutes', { headers })
       ]);
       
       if (histRes.ok) setHistory(await histRes.json());
@@ -45,7 +43,7 @@ export default function History() {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to permanently clear this archival log record?')) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/summary/${id}`, {
+      const res = await fetch(`https://lectura-ai-ungu.onrender.com/api/summary/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });

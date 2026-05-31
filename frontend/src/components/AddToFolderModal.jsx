@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 
-import { API_BASE_URL } from '../config';
-
 export default function AddToFolderModal({ summaryId, folders, onClose, onAdded }) {
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -18,7 +16,7 @@ export default function AddToFolderModal({ summaryId, folders, onClose, onAdded 
 
   const handleSave = async () => {
     if (!selectedFolder) return;
-    await axios.patch(`${API_BASE_URL}/api/summary/${summaryId}`, 
+    await axios.patch(`https://lectura-ai-ungu.onrender.com/api/summary/${summaryId}`, 
       { folderId: selectedFolder._id },
       { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
     );
