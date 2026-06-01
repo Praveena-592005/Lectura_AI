@@ -15,8 +15,10 @@ import Folder from '../models/Folder.js';
 const require = createRequire(import.meta.url);
 const pkg = require('pdf-parse');
 
-// The function is stored under the 'PDFParse' key in your specific version
-const pdfParse = pkg.PDFParse;
+// This targets the function directly if the package is a function, 
+// or the default export if it's an object. 
+// This is the cleanest way to load it.
+const pdfParse = (typeof pkg === 'function') ? pkg : (pkg.default || pkg);
 
 console.log("DEBUG: pdfParse is now function:", typeof pdfParse === 'function');
 
@@ -141,10 +143,10 @@ else if (mime === 'application/pdf') {
     // The library class likely requires the .parse() method
     // Try calling it as a function if it is the constructor, 
     // or use the static parse method if available.
-    // Based on the error, pdfParse is the Class constructor.
-    const pdfInstance = new pdfParse(); 
-    const data = await pdfInstance.parse(dataBuffer);
-    extractedText = data.text;
+   // Simply pass the buffer to the function. 
+// Do NOT use 'new'. Do NOT call '.parse()'.
+const data = await pdfParse(dataBuffer);
+extractedText = data.text;
 }
 
     else if (mime.includes('word')) {
