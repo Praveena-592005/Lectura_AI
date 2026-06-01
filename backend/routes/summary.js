@@ -152,8 +152,8 @@ router.post('/summarize-youtube', protect, async (req, res) => {
   const outputAudio = `./temp_${Date.now()}.mp3`;
 
   try {
-    // UPDATED COMMAND: Added --user-agent to mimic a real Chrome browser
-    const cmd = `yt-dlp --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" --cookies ./cookies.txt --extractor-args "youtube:player_client=default" -x --audio-format mp3 -o "${outputAudio}" "${videoUrl}"`;
+    // UPDATED COMMAND: Added --remote-components ejs:github to solve JS challenges
+    const cmd = `yt-dlp --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" --cookies ./cookies.txt --remote-components ejs:github --extractor-args "youtube:player_client=default" -x --audio-format mp3 -o "${outputAudio}" "${videoUrl}"`;
     
     await execPromise(cmd);
     
@@ -168,7 +168,7 @@ router.post('/summarize-youtube', protect, async (req, res) => {
     const newSummary = await Summary.create(summaryData);
     
     if (fs.existsSync(outputAudio)) fs.unlinkSync(outputAudio);
-    res.status(201).json(newSummary);
+    res.json(newSummary);
     
   } catch (err) { 
     if (fs.existsSync(outputAudio)) fs.unlinkSync(outputAudio);
