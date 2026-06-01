@@ -18,7 +18,7 @@ const app = express();
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // 1. Get the URL from env, remove any trailing slash
+    // 1. Get the URL from env, remove any trailing slashh
     const allowedOrigin = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, "");
     
     // 2. Allow requests with no origin (like mobile apps or curl) 
