@@ -11,10 +11,9 @@ import { uploadMedia } from '../middleware/fileUpload.js';
 import Folder from '../models/Folder.js';
 
 const require = createRequire(import.meta.url);
-const pdfParseLib = require('pdf-parse');
+// Most versions of pdf-parse export the main function as the default
+const pdfParse = require('pdf-parse');
 
-// Many versions of pdf-parse export the function as the default property
-const pdfParse = pdfParseLib.default || pdfParseLib;
 
 console.log("PDF PARSE TYPE:", typeof pdfParse); // Should log 'function'
 
@@ -133,10 +132,13 @@ router.post('/summarize-file', protect, uploadMedia.single('file'), async (req, 
     const mime = req.file.mimetype;
 
     // Inside your summarize-file route
+// PDF processing using Buffer
 if (mime === 'application/pdf') {
-    // Use this logic to catch the function regardless of how it's exported
-    const parser = typeof pdfParse === 'function' ? pdfParse : (pdfParse.default || pdfParse);
-    const data = await parser(req.file.buffer); 
+    // If pdfParse is an object with a default key, use it; otherwise use the object itself
+    const parser = pdfParse.default || pdfParse; 
+    
+    // Safety check: if it's still not a function, force it by looking for the library's actual function
+    const data = typeof parser === 'function' ? await parser(req.file.buffer) : await pdfParse(req.file.buffer);
     extractedText = data.text;
 }
     // Word processing using Buffer
