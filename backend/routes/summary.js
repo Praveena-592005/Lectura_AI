@@ -153,8 +153,11 @@ router.post('/summarize-youtube', protect, async (req, res) => {
 
   try {
     // 1. Download and convert to MP3 using yt-dlp
-    // This command downloads only the audio and converts it to MP3
-    await execPromise(`yt-dlp -x --audio-format mp3 -o "${outputAudio}" "${videoUrl}"`);
+    // Added --cookies ./cookies.txt to authenticate as a user
+    // Added --extractor-args "youtube:player_client=default" to help with bot detection
+    const cmd = `yt-dlp --cookies ./cookies.txt --extractor-args "youtube:player_client=default" -x --audio-format mp3 -o "${outputAudio}" "${videoUrl}"`;
+    
+    await execPromise(cmd);
     
     // 2. Transcribe the file using your existing Groq function
     const transcript = await transcribeWithGroq(outputAudio);
@@ -179,7 +182,7 @@ router.post('/summarize-youtube', protect, async (req, res) => {
     if (fs.existsSync(outputAudio)) fs.unlinkSync(outputAudio);
     console.error("Pipeline failed:", err);
     res.status(500).json({ 
-      message: 'Processing failed. The video might be private, too long, or unsupported.' 
+      message: 'Processing failed. YouTube blocked the request or the video is invalid.' 
     }); 
   }
 });
