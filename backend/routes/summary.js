@@ -136,13 +136,9 @@ router.post('/summarize-file', protect, uploadMedia.single('file'), async (req, 
     // ... existing code ...
     // Inside router.post('/summarize-file', ...)
 else if (mime === 'application/pdf') {
-    const dataBuffer = fs.readFileSync(req.file.path);
-    
-    // Log the type to your Render dashboard to confirm it is a function
-    console.log("Type of pdfParse:", typeof pdfParse); 
-    
-    const data = await pdfParse(dataBuffer);
-    extractedText = data.text;
+  const dataBuffer = fs.readFileSync(req.file.path);
+  const data = await pdfParse(dataBuffer);
+  extractedText = data.text;
 }
 
     else if (mime.includes('word')) {
