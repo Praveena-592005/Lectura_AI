@@ -120,22 +120,26 @@ router.post('/summarize', protect, async (req, res) => {
 router.post('/summarize-file', protect, uploadMedia.single('file'), async (req, res) => {
   const { title, depth, folderId } = req.body;
   if (!req.file) return res.status(400).json({ message: 'No file' });
+  
   try {
     let extractedText = '';
     const mime = req.file.mimetype;
-    if (mime.includes('audio') || mime.includes('video')) extractedText = await transcribeWithGroq(req.file.path);
-    
-    // Replace your existing pdf-parse logic with this:
-else if (mime === 'application/pdf') {
-    const dataBuffer = fs.readFileSync(req.file.path);
-    // This handles both direct function exports and .default exports
-    const parser = (typeof pdfParse === 'function') ? pdfParse : pdfParse.default;
-    const data = await parser(dataBuffer);
-    extractedText = data.text;
-}
 
-    else if (mime.includes('word')) extractedText = (await mammoth.extractRawText({ buffer: fs.readFileSync(req.file.path) })).value;
-    else extractedText = fs.readFileSync(req.file.path, 'utf-8');
+    if (mime.includes('audio') || mime.includes('video')) {
+      extractedText = await transcribeWithGroq(req.file.path);
+    } 
+    else if (mime === 'application/pdf') {
+      const dataBuffer = fs.readFileSync(req.file.path);
+      const parser = (typeof pdfParse === 'function') ? pdfParse : pdfParse.default;
+      const data = await parser(dataBuffer);
+      extractedText = data.text;
+    } 
+    else if (mime.includes('word')) {
+      extractedText = (await mammoth.extractRawText({ buffer: fs.readFileSync(req.file.path) })).value;
+    } 
+    else {
+      extractedText = fs.readFileSync(req.file.path, 'utf-8');
+    }
 
     const summaryText = await generateSummaryWithGroq(extractedText, depth);
     const summaryData = { user: req.user._id, title: title || req.file.originalname, originalText: extractedText, summaryText };
@@ -147,7 +151,9 @@ else if (mime === 'application/pdf') {
     const newSummary = await Summary.create(summaryData);
     if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
     res.status(201).json(newSummary);
+    
   } catch (err) { 
+    console.error("File processing error:", err);
     if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
     res.status(500).json({ message: err.message }); 
   }
