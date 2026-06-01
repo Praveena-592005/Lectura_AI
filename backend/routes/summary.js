@@ -11,15 +11,14 @@ import { uploadMedia } from '../middleware/fileUpload.js';
 import Folder from '../models/Folder.js';
 
 // Setup require for CommonJS modules
+// Setup require for CommonJS modules
 const require = createRequire(import.meta.url);
 const pkg = require('pdf-parse');
 
-// The function is almost certainly stored under the key 'default' or is the object itself
-const pdfParse = (typeof pkg === 'function') ? pkg : (pkg.default || pkg);
+// The function is stored under the 'PDFParse' key in your specific version
+const pdfParse = pkg.PDFParse;
 
-// ADD THIS LOG to verify the fix in your Render logs
-console.log("DEBUG: pdfParse keys:", Object.keys(pkg));
-console.log("DEBUG: pdfParse is function:", typeof pdfParse === 'function');
+console.log("DEBUG: pdfParse is now function:", typeof pdfParse === 'function');
 
 const router = express.Router();
 const execPromise = util.promisify(exec);
