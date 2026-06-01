@@ -14,9 +14,12 @@ import Folder from '../models/Folder.js';
 const require = createRequire(import.meta.url);
 const pkg = require('pdf-parse');
 
-// Force the resolution of the function
-// If pkg is the function, use it. Otherwise, look for the 'default' property
-const pdfParse = (typeof pkg === 'function') ? pkg : (pkg.default ? pkg.default : pkg);
+// The function is almost certainly stored under the key 'default' or is the object itself
+const pdfParse = (typeof pkg === 'function') ? pkg : (pkg.default || pkg);
+
+// ADD THIS LOG to verify the fix in your Render logs
+console.log("DEBUG: pdfParse keys:", Object.keys(pkg));
+console.log("DEBUG: pdfParse is function:", typeof pdfParse === 'function');
 
 const router = express.Router();
 const execPromise = util.promisify(exec);
