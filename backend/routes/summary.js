@@ -132,9 +132,11 @@ router.post('/summarize-file', protect, uploadMedia.single('file'), async (req, 
     let extractedText = '';
     const mime = req.file.mimetype;
 
-    // PDF processing using Buffer
-    if (mime === 'application/pdf') {
-    const data = await pdfParse(req.file.buffer); // This will now work
+    // Inside your summarize-file route
+if (mime === 'application/pdf') {
+    // Use this logic to catch the function regardless of how it's exported
+    const parser = typeof pdfParse === 'function' ? pdfParse : (pdfParse.default || pdfParse);
+    const data = await parser(req.file.buffer); 
     extractedText = data.text;
 }
     // Word processing using Buffer
