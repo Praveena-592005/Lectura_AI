@@ -3,20 +3,21 @@ const require = createRequire(import.meta.url);
 const pdfLib = require('pdf-parse');
 
 export const parsePdf = async (buffer) => {
-    // 1. Identify the class or function
-    const Target = pdfLib.PDFParse || pdfLib;
+    // 1. The logs confirm 'PDFParse' is a class constructor
+    const parserInstance = new pdfLib.PDFParse();
+    
+    // 2. We wrap this in a Promise because these class-based parsers 
+    // often use event emitters or callbacks rather than direct return values
+    return new Promise((resolve, reject) => {
+        parserInstance.on('pdfParser_dataReady', (pdfData) => {
+            // Depending on the version, data is in 'pdfData'
+            resolve({ text: pdfData.Pages.map(p => p.Texts.map(t => decodeURIComponent(t.R[0].T)).join(' ')).join('\n') });
+        });
+        
+        parserInstance.on('pdfParser_dataError', (err) => {
+            reject(err);
+        });
 
-    // 2. If it is a class, we MUST use 'new'
-    const instance = (typeof Target === 'function' && Target.prototype && Target.prototype.constructor.name === 'PDFParse') 
-        ? new Target() 
-        : Target;
-
-    // 3. Some classes need an explicit .parse() call, others are callable directly
-    if (typeof instance.parse === 'function') {
-        return await instance.parse(buffer);
-    } else if (typeof instance === 'function') {
-        return await instance(buffer);
-    }
-
-    throw new Error("Could not initialize PDF parser.");
+        parserInstance.parseBuffer(buffer);
+    });
 };
