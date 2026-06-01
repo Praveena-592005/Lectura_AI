@@ -10,20 +10,15 @@ import { protect } from '../middleware/authMiddleware.js';
 import { uploadMedia } from '../middleware/fileUpload.js';
 import Folder from '../models/Folder.js';
 
-// Setup require for CommonJS modules
-// Setup require for CommonJS modules
+// REQUIRED: Correctly import pdf-parse for ESM environments
 const require = createRequire(import.meta.url);
-const pkg = require('pdf-parse');
+const pdfParse = require('pdf-parse');
 
-// This targets the function directly if the package is a function, 
-// or the default export if it's an object. 
-// This is the cleanest way to load it.
-const pdfParse = (typeof pkg === 'function') ? pkg : (pkg.default || pkg);
-
-console.log("DEBUG: pdfParse is now function:", typeof pdfParse === 'function');
+console.log("PDF PARSE CHECK:", typeof pdfParse);
 
 const router = express.Router();
 const execPromise = util.promisify(exec);
+
 // --- Helper Functions ---
 function extractVideoId(url) {
   const regExp = /^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/|shorts\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/;
@@ -137,17 +132,13 @@ router.post('/summarize-file', protect, uploadMedia.single('file'), async (req, 
     } 
     // ... existing code ...
     // Inside router.post('/summarize-file', ...)
-else if (mime === 'application/pdf') {
-    const dataBuffer = fs.readFileSync(req.file.path);
-    
-    // The library class likely requires the .parse() method
-    // Try calling it as a function if it is the constructor, 
-    // or use the static parse method if available.
-   // Simply pass the buffer to the function. 
-// Do NOT use 'new'. Do NOT call '.parse()'.
-const data = await pdfParse(dataBuffer);
-extractedText = data.text;
-}
+    // ... existing code inside router.post('/summarize-file', ...)
+    else if (mime === 'application/pdf') {
+        const dataBuffer = fs.readFileSync(req.file.path);
+        const data = await pdfParse(dataBuffer);
+        extractedText = data.text;
+    }
+// ...
 
     else if (mime.includes('word')) {
       extractedText = (await mammoth.extractRawText({ buffer: fs.readFileSync(req.file.path) })).value;
