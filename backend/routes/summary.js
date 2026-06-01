@@ -152,20 +152,14 @@ router.post('/summarize-youtube', protect, async (req, res) => {
   const outputAudio = `./temp_${Date.now()}.mp3`;
 
   try {
-    // 1. Download and convert to MP3 using yt-dlp
-    // Added --cookies ./cookies.txt to authenticate as a user
-    // Added --extractor-args "youtube:player_client=default" to help with bot detection
-    const cmd = `yt-dlp --cookies ./cookies.txt --extractor-args "youtube:player_client=default" -x --audio-format mp3 -o "${outputAudio}" "${videoUrl}"`;
+    // UPDATED COMMAND: Added --user-agent to mimic a real Chrome browser
+    const cmd = `yt-dlp --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" --cookies ./cookies.txt --extractor-args "youtube:player_client=default" -x --audio-format mp3 -o "${outputAudio}" "${videoUrl}"`;
     
     await execPromise(cmd);
     
-    // 2. Transcribe the file using your existing Groq function
     const transcript = await transcribeWithGroq(outputAudio);
-    
-    // 3. Generate summary
     const summaryText = await generateSummaryWithGroq(transcript, depth);
     
-    // 4. Save to DB
     const summaryData = { user: req.user._id, title: title || 'YouTube', originalText: transcript, summaryText };
     if (folderId && folderId !== 'null' && folderId !== '') {
       summaryData.folder = folderId;
@@ -173,9 +167,7 @@ router.post('/summarize-youtube', protect, async (req, res) => {
 
     const newSummary = await Summary.create(summaryData);
     
-    // 5. Cleanup temp file
     if (fs.existsSync(outputAudio)) fs.unlinkSync(outputAudio);
-    
     res.status(201).json(newSummary);
     
   } catch (err) { 
