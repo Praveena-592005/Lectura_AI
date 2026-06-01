@@ -12,7 +12,8 @@ import Folder from '../models/Folder.js';
 
 // Setup require for CommonJS modules
 const require = createRequire(import.meta.url);
-const pdfParse = require('pdf-parse'); // This loads the library as a function correctly
+const pkg = require('pdf-parse'); // This loads the library as a function correctly
+const pdfParse = (typeof pkg === 'function') ? pkg : (pkg.default || pkg);
 
 const router = express.Router();
 const execPromise = util.promisify(exec);
@@ -131,7 +132,10 @@ router.post('/summarize-file', protect, uploadMedia.single('file'), async (req, 
     // Inside router.post('/summarize-file', ...)
 else if (mime === 'application/pdf') {
     const dataBuffer = fs.readFileSync(req.file.path);
-    // Because we used require('pdf-parse') at the top, this works directly:
+    
+    // Log the type to your Render dashboard to confirm it is a function
+    console.log("Type of pdfParse:", typeof pdfParse); 
+    
     const data = await pdfParse(dataBuffer);
     extractedText = data.text;
 }
