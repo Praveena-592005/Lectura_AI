@@ -124,7 +124,16 @@ router.post('/summarize-file', protect, uploadMedia.single('file'), async (req, 
     let extractedText = '';
     const mime = req.file.mimetype;
     if (mime.includes('audio') || mime.includes('video')) extractedText = await transcribeWithGroq(req.file.path);
-    else if (mime === 'application/pdf') extractedText = (await pdfParse(fs.readFileSync(req.file.path))).text;
+    
+    // Replace your existing pdf-parse logic with this:
+else if (mime === 'application/pdf') {
+    const dataBuffer = fs.readFileSync(req.file.path);
+    // This handles both direct function exports and .default exports
+    const parser = (typeof pdfParse === 'function') ? pdfParse : pdfParse.default;
+    const data = await parser(dataBuffer);
+    extractedText = data.text;
+}
+
     else if (mime.includes('word')) extractedText = (await mammoth.extractRawText({ buffer: fs.readFileSync(req.file.path) })).value;
     else extractedText = fs.readFileSync(req.file.path, 'utf-8');
 
