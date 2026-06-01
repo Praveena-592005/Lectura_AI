@@ -136,9 +136,15 @@ router.post('/summarize-file', protect, uploadMedia.single('file'), async (req, 
     // ... existing code ...
     // Inside router.post('/summarize-file', ...)
 else if (mime === 'application/pdf') {
-  const dataBuffer = fs.readFileSync(req.file.path);
-  const data = await pdfParse(dataBuffer);
-  extractedText = data.text;
+    const dataBuffer = fs.readFileSync(req.file.path);
+    
+    // The library class likely requires the .parse() method
+    // Try calling it as a function if it is the constructor, 
+    // or use the static parse method if available.
+    // Based on the error, pdfParse is the Class constructor.
+    const pdfInstance = new pdfParse(); 
+    const data = await pdfInstance.parse(dataBuffer);
+    extractedText = data.text;
 }
 
     else if (mime.includes('word')) {
