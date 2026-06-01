@@ -12,8 +12,11 @@ import Folder from '../models/Folder.js';
 
 // Setup require for CommonJS modules
 const require = createRequire(import.meta.url);
-const pkg = require('pdf-parse'); // This loads the library as a function correctly
-const pdfParse = (typeof pkg === 'function') ? pkg : (pkg.default || pkg);
+const pkg = require('pdf-parse');
+
+// Force the resolution of the function
+// If pkg is the function, use it. Otherwise, look for the 'default' property
+const pdfParse = (typeof pkg === 'function') ? pkg : (pkg.default ? pkg.default : pkg);
 
 const router = express.Router();
 const execPromise = util.promisify(exec);
