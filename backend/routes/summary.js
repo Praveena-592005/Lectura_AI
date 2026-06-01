@@ -11,8 +11,10 @@ import { protect } from '../middleware/authMiddleware.js';
 import { uploadMedia } from '../middleware/fileUpload.js';
 import Folder from '../models/Folder.js';
 
+import pdfParsePkg from 'pdf-parse';
+
 const require = createRequire(import.meta.url);
-const pdfParse = require('pdf-parse');
+const pdfParse = typeof pdfParsePkg === 'function' ? pdfParsePkg : pdfParsePkg.default;
 const router = express.Router();
 
 const execPromise = util.promisify(exec);
@@ -128,12 +130,14 @@ router.post('/summarize-file', protect, uploadMedia.single('file'), async (req, 
     if (mime.includes('audio') || mime.includes('video')) {
       extractedText = await transcribeWithGroq(req.file.path);
     } 
+    // ... existing code ...
     else if (mime === 'application/pdf') {
       const dataBuffer = fs.readFileSync(req.file.path);
-      const parser = (typeof pdfParse === 'function') ? pdfParse : pdfParse.default;
-      const data = await parser(dataBuffer);
+      // Now using the properly imported pdfParse constant
+      const data = await pdfParse(dataBuffer);
       extractedText = data.text;
     } 
+
     else if (mime.includes('word')) {
       extractedText = (await mammoth.extractRawText({ buffer: fs.readFileSync(req.file.path) })).value;
     } 
