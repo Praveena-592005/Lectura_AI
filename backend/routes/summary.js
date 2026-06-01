@@ -10,14 +10,12 @@ import { protect } from '../middleware/authMiddleware.js';
 import { uploadMedia } from '../middleware/fileUpload.js';
 import Folder from '../models/Folder.js';
 
-// Use this specific pattern to bypass ESM module wrapping issues
-const require = createRequire(import.meta.url);
-const pdfParse = require('pdf-parse');
+import { parsePdf } from '../utils/pdfParser.js';
+
 
 const router = express.Router();
 const execPromise = util.promisify(exec);
 
-console.log("PDF PARSE TYPE:", typeof pdfParse); // Should log 'function'
 
 // --- Helper Functions ---
 function extractVideoId(url) {
@@ -133,8 +131,7 @@ router.post('/summarize-file', protect, uploadMedia.single('file'), async (req, 
 // PDF processing using Buffer
 // PDF processing using Buffer
 if (mime === 'application/pdf') {
-    // Since require('pdf-parse') returns the function directly, call it like this:
-    const data = await pdfParse(req.file.buffer);
+    const data = await parsePdf(req.file.buffer);
     extractedText = data.text;
 }
     // Word processing using Buffer
