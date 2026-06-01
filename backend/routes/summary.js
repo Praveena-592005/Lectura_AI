@@ -10,14 +10,13 @@ import { protect } from '../middleware/authMiddleware.js';
 import { uploadMedia } from '../middleware/fileUpload.js';
 import Folder from '../models/Folder.js';
 
-// REQUIRED: Correctly import pdf-parse for ESM environments
 const require = createRequire(import.meta.url);
-const pdfParse = require('pdf-parse');
+const pdfParseLib = require('pdf-parse');
 
-console.log("PDF PARSE CHECK:", typeof pdfParse);
+// Many versions of pdf-parse export the function as the default property
+const pdfParse = pdfParseLib.default || pdfParseLib;
 
-const router = express.Router();
-const execPromise = util.promisify(exec);
+console.log("PDF PARSE TYPE:", typeof pdfParse); // Should log 'function'
 
 // --- Helper Functions ---
 function extractVideoId(url) {
@@ -131,9 +130,9 @@ router.post('/summarize-file', protect, uploadMedia.single('file'), async (req, 
 
     // PDF processing using Buffer
     if (mime === 'application/pdf') {
-        const data = await pdfParse(req.file.buffer);
-        extractedText = data.text;
-    } 
+    const data = await pdfParse(req.file.buffer); // This will now work
+    extractedText = data.text;
+}
     // Word processing using Buffer
     else if (mime.includes('word')) {
         extractedText = (await mammoth.extractRawText({ buffer: req.file.buffer })).value;
