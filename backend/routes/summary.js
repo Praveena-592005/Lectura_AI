@@ -119,6 +119,8 @@ router.post('/summarize', protect, async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// routes/summary.js
+
 router.post('/summarize-file', protect, uploadMedia.single('file'), async (req, res) => {
   const { title, depth, folderId } = req.body;
   if (!req.file) return res.status(400).json({ message: 'No file' });
@@ -127,24 +129,25 @@ router.post('/summarize-file', protect, uploadMedia.single('file'), async (req, 
     let extractedText = '';
     const mime = req.file.mimetype;
 
-    if (mime.includes('audio') || mime.includes('video')) {
-      extractedText = await transcribeWithGroq(req.file.path);
-    } 
-    // ... existing code ...
-    // Inside router.post('/summarize-file', ...)
-    // ... existing code inside router.post('/summarize-file', ...)
-    else if (mime === 'application/pdf') {
-        const dataBuffer = fs.readFileSync(req.file.path);
-        const data = await pdfParse(dataBuffer);
+    // PDF processing using Buffer
+    if (mime === 'application/pdf') {
+        const data = await pdfParse(req.file.buffer);
         extractedText = data.text;
-    }
-// ...
-
-    else if (mime.includes('word')) {
-      extractedText = (await mammoth.extractRawText({ buffer: fs.readFileSync(req.file.path) })).value;
     } 
-    else {
-      extractedText = fs.readFileSync(req.file.path, 'utf-8');
+    // Word processing using Buffer
+    else if (mime.includes('word')) {
+        extractedText = (await mammoth.extractRawText({ buffer: req.file.buffer })).value;
+    } 
+    // Text processing using Buffer
+    else if (mime.includes('text')) {
+        extractedText = req.file.buffer.toString('utf-8');
+    }
+    // Audio/Video (Requires a temporary file for external tools like Whisper)
+    else if (mime.includes('audio') || mime.includes('video')) {
+        const tempPath = `./temp_${Date.now()}_${req.file.originalname}`;
+        fs.writeFileSync(tempPath, req.file.buffer);
+        extractedText = await transcribeWithGroq(tempPath);
+        fs.unlinkSync(tempPath); // Cleanup after processing
     }
 
     const summaryText = await generateSummaryWithGroq(extractedText, depth);
@@ -155,12 +158,10 @@ router.post('/summarize-file', protect, uploadMedia.single('file'), async (req, 
     }
 
     const newSummary = await Summary.create(summaryData);
-    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
     res.status(201).json(newSummary);
     
   } catch (err) { 
     console.error("File processing error:", err);
-    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
     res.status(500).json({ message: err.message }); 
   }
 });
