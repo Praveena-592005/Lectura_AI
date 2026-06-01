@@ -3,18 +3,20 @@ const require = createRequire(import.meta.url);
 const pdfLib = require('pdf-parse');
 
 export const parsePdf = async (buffer) => {
-    // The logs show that your 'pdf-parse' package is actually exposing a class/object structure
-    // We will target the PDFParse class found in the logs
-    const parser = pdfLib.PDFParse || pdfLib;
+    // 1. Identify the class or function
+    const Target = pdfLib.PDFParse || pdfLib;
 
-    if (typeof parser === 'function') {
-        return await parser(buffer);
+    // 2. If it is a class, we MUST use 'new'
+    const instance = (typeof Target === 'function' && Target.prototype && Target.prototype.constructor.name === 'PDFParse') 
+        ? new Target() 
+        : Target;
+
+    // 3. Some classes need an explicit .parse() call, others are callable directly
+    if (typeof instance.parse === 'function') {
+        return await instance.parse(buffer);
+    } else if (typeof instance === 'function') {
+        return await instance(buffer);
     }
 
-    // If it's a class/object, handle it as a standard async call
-    if (typeof parser.parse === 'function') {
-        return await parser.parse(buffer);
-    }
-
-    throw new Error(`PDF library structure not recognized. Available: ${JSON.stringify(Object.keys(pdfLib))}`);
+    throw new Error("Could not initialize PDF parser.");
 };
