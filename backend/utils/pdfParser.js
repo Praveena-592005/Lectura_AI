@@ -1,24 +1,20 @@
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-const pdfParse = require('pdf-parse');
+const pdfLib = require('pdf-parse');
 
 export const parsePdf = async (buffer) => {
-    console.log("PDF LIB STRUCTURE:", Object.keys(pdfParse));
-    console.log("PDF LIB TYPE:", typeof pdfParse);
+    // The logs show that your 'pdf-parse' package is actually exposing a class/object structure
+    // We will target the PDFParse class found in the logs
+    const parser = pdfLib.PDFParse || pdfLib;
 
-    // Try to find the function dynamically
-    let parser = null;
-    if (typeof pdfParse === 'function') {
-        parser = pdfParse;
-    } else if (pdfParse.default && typeof pdfParse.default === 'function') {
-        parser = pdfParse.default;
-    } else if (pdfParse.pdf && typeof pdfParse.pdf === 'function') {
-        parser = pdfParse.pdf;
+    if (typeof parser === 'function') {
+        return await parser(buffer);
     }
 
-    if (typeof parser !== 'function') {
-        throw new Error(`PDF parser could not be loaded. Structure: ${JSON.stringify(Object.keys(pdfParse))}`);
+    // If it's a class/object, handle it as a standard async call
+    if (typeof parser.parse === 'function') {
+        return await parser.parse(buffer);
     }
-    
-    return await parser(buffer);
+
+    throw new Error(`PDF library structure not recognized. Available: ${JSON.stringify(Object.keys(pdfLib))}`);
 };
