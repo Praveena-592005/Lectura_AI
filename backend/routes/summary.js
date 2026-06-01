@@ -10,16 +10,14 @@ import { protect } from '../middleware/authMiddleware.js';
 import { uploadMedia } from '../middleware/fileUpload.js';
 import Folder from '../models/Folder.js';
 
+// Use this specific pattern to bypass ESM module wrapping issues
 const require = createRequire(import.meta.url);
-// Most versions of pdf-parse export the main function as the default
 const pdfParse = require('pdf-parse');
 
+const router = express.Router();
+const execPromise = util.promisify(exec);
 
 console.log("PDF PARSE TYPE:", typeof pdfParse); // Should log 'function'
-
-const router = express.Router();
-
-const execPromise = util.promisify(exec);
 
 // --- Helper Functions ---
 function extractVideoId(url) {
@@ -133,12 +131,10 @@ router.post('/summarize-file', protect, uploadMedia.single('file'), async (req, 
 
     // Inside your summarize-file route
 // PDF processing using Buffer
+// PDF processing using Buffer
 if (mime === 'application/pdf') {
-    // If pdfParse is an object with a default key, use it; otherwise use the object itself
-    const parser = pdfParse.default || pdfParse; 
-    
-    // Safety check: if it's still not a function, force it by looking for the library's actual function
-    const data = typeof parser === 'function' ? await parser(req.file.buffer) : await pdfParse(req.file.buffer);
+    // Since require('pdf-parse') returns the function directly, call it like this:
+    const data = await pdfParse(req.file.buffer);
     extractedText = data.text;
 }
     // Word processing using Buffer
