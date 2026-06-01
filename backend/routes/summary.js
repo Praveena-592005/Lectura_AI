@@ -1,6 +1,5 @@
 import { exec } from 'child_process';
 import util from 'util';
-
 import express from 'express';
 import mammoth from 'mammoth';
 import fs from 'fs';
@@ -11,14 +10,12 @@ import { protect } from '../middleware/authMiddleware.js';
 import { uploadMedia } from '../middleware/fileUpload.js';
 import Folder from '../models/Folder.js';
 
-import pdfParsePkg from 'pdf-parse';
-
+// Setup require for CommonJS modules
 const require = createRequire(import.meta.url);
-const pdfParse = typeof pdfParsePkg === 'function' ? pdfParsePkg : pdfParsePkg.default;
+const pdfParse = require('pdf-parse'); // This loads the library as a function correctly
+
 const router = express.Router();
-
 const execPromise = util.promisify(exec);
-
 // --- Helper Functions ---
 function extractVideoId(url) {
   const regExp = /^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/|shorts\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/;
@@ -131,12 +128,13 @@ router.post('/summarize-file', protect, uploadMedia.single('file'), async (req, 
       extractedText = await transcribeWithGroq(req.file.path);
     } 
     // ... existing code ...
-    else if (mime === 'application/pdf') {
-      const dataBuffer = fs.readFileSync(req.file.path);
-      // Now using the properly imported pdfParse constant
-      const data = await pdfParse(dataBuffer);
-      extractedText = data.text;
-    } 
+    // Inside router.post('/summarize-file', ...)
+else if (mime === 'application/pdf') {
+    const dataBuffer = fs.readFileSync(req.file.path);
+    // Because we used require('pdf-parse') at the top, this works directly:
+    const data = await pdfParse(dataBuffer);
+    extractedText = data.text;
+}
 
     else if (mime.includes('word')) {
       extractedText = (await mammoth.extractRawText({ buffer: fs.readFileSync(req.file.path) })).value;
