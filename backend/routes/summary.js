@@ -18,6 +18,10 @@ const pdfParse = pdfParseLib.default || pdfParseLib;
 
 console.log("PDF PARSE TYPE:", typeof pdfParse); // Should log 'function'
 
+const router = express.Router();
+
+const execPromise = util.promisify(exec);
+
 // --- Helper Functions ---
 function extractVideoId(url) {
   const regExp = /^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/|shorts\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/;
